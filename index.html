@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Psychedelic Cosmic Virtual Organ Experience</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Orbitron', sans-serif;
+            background: #000;
+            color: #fff;
+        }
+        
+        #universe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            box-sizing: border-box;
+            background: radial-gradient(ellipse at bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+            color: #fff;
+            text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff, 0 0 30px #ffff00;
+            animation: colorChange 5s infinite;
+        }
+        
+        @keyframes colorChange {
+            0% { color: #ff00ff; }
+            33% { color: #00ffff; }
+            66% { color: #ffff00; }
+            100% { color: #ff00ff; }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .control-group:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+        }
+        
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 0.8em;
+        }
+        
+        select, input[type="range"] {
+            width: 100px;
+            padding: 5px;
+            border: none;
+            border-radius: 25px;
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        select:hover, input[type="range"]:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        input[type="range"] {
+            -webkit-appearance: none;
+            height: 5px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+        }
+        
+        .key-map {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .key-map div {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 0.7em;
+            color: #fff;
+            text-shadow: 0 0 5px #fff;
+            transition: all 0.3s ease;
+        }
+        
+        .key-map div:hover {
+            background: rgba(255, 255, 255, 0.4);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .control-group {
+                width: 80%;
+            }
+
+            select, input[type="range"] {
+                width: 100%;
+            }
+
+            .key-map {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="universe"></div>
+    <div class="overlay">
+        <h1>Psychedelic Cosmic Organ</h1>
+        <div class="controls">
+            <div class="control-group">
+                <label for="waveType">Wave</label>
+                <select id="waveType">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Sawtooth</option>
+                    <option value="triangle">Triangle</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="volume">Volume</label>
+                <input type="range" id="volume" min="0" max="1" step="0.1" value="0.7">
+            </div>
+            <div class="control-group">
+                <label for="octave">Octave</label>
+                <select id="octave">
+                    <option value="-1">-1</option>
+                    <option value="0" selected>0</option>
+                    <option value="1">+1</option>
+                </select>
+            </div>
+        </div>
+        <div class="key-map">
+            <div>A: C</div>
+            <div>W: C#</div>
+            <div>S: D</div>
+            <div>E: D#</div>
+            <div>D: E</div>
+            <div>F: F</div>
+            <div>T: F#</div>
+            <div>G: G</div>
+            <div>Y: G#</div>
+            <div>H: A</div>
+            <div>U: A#</div>
+            <div>J: B</div>
+            <div>K: C</div>
+        </div>
+    </div>
+
+    <script>
+        const synth = new Tone.PolySynth(Tone.Synth, {
+            oscillator: {
+                type: "sine"
+            },
+            envelope: {
+                attack: 0.05,
+                decay: 0.2,
+                sustain: 0.2,
+                release: 1
+            }
+        }).toDestination();
+
+        const reverb = new Tone.Reverb(5).toDestination();
+        const delay = new Tone.FeedbackDelay("8n", 0.5).toDestination();
+        const distortion = new Tone.Distortion(0.8).toDestination();
+        synth.connect(reverb);
+        synth.connect(delay);
+        synth.connect(distortion);
+
+        const waveTypeSelect = document.getElementById('waveType');
+        const volumeControl = document.getElementById('volume');
+        const octaveSelect = document.getElementById('octave');
+
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('universe').appendChild(renderer.domElement);
+
+        const baseNotes = {
+            'C': 'C4', 'Cs': 'C#4', 'D': 'D4', 'Ds': 'D#4', 'E': 'E4',
+            'F': 'F4', 'Fs': 'F#4', 'G': 'G4', 'Gs': 'G#4',
+            'A': 'A4', 'As': 'A#4', 'B': 'B4', 'C2': 'C5'
+        };
+
+        const keyMap = {
+            'a': 'C', 'w': 'Cs', 's': 'D', 'e': 'Ds', 'd': 'E', 'f': 'F',
+            't': 'Fs', 'g': 'G', 'y': 'Gs', 'h': 'A', 'u': 'As', 'j': 'B', 'k': 'C2'
+        };
+
+        // Create a galaxy of colorful stars
+        const starsGeometry = new THREE.BufferGeometry();
+        const starsMaterial = new THREE.PointsMaterial({ 
+            size: 0.1, 
+            vertexColors: true 
+        });
+
+        const starsVertices = [];
+        const starsColors = [];
+        for (let i = 0; i < 20000; i++) {
+            const x = (Math.random() - 0.5) * 2000;
+            const y = (Math.random() - 0.5) * 2000;
+            const z = (Math.random() - 0.5) * 2000;
+            starsVertices.push(x, y, z);
+
+            const r = Math.random();
+            const g = Math.random();
+            const b = Math.random();
+            starsColors.push(r, g, b);
+        }
+
+        starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starsVertices, 3));
+        starsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
+        const starField = new THREE.Points(starsGeometry, starsMaterial);
+        scene.add(starField);
+
+        // Create cosmic keys
+        const keys = [];
+        const keyPositions = [-6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6];
+
+        keyPositions.forEach((pos, index) => {
+            const geometry = new THREE.TorusKnotGeometry(0.8, 0.3, 100, 16);
+            const material = new THREE.MeshPhongMaterial({ 
+                color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                emissive: new THREE.Color(Math.random(), Math.random(), Math.random()),
+                specular: 0xffffff,
+                shininess: 100,
+                transparent: true,
+                opacity: 0.7
+            });
+            const key = new THREE.Mesh(geometry, material);
+            key.position.set(pos * 1.5, 0, 0);
+            key.userData.note = Object.keys(baseNotes)[index];
+            scene.add(key);
+            keys.push(key);
+        });
+
+        // Add ambient and point lights
+        const ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+        pointLight.position.set(0, 10, 10);
+        scene.add(pointLight);
+
+        camera.position.z = 15;
+
+        function getNote(noteName) {
+            const octaveShift = parseInt(octaveSelect.value);
+            const baseNote = baseNotes[noteName];
+            const [note, octave] = baseNote.split(/(\d+)/);
+            return note + (parseInt(octave) + octaveShift);
+        }
+
+        const activeNotes = new Set();
+
+        function playNote(note, key) {
+            if (!activeNotes.has(note)) {
+                synth.triggerAttack(note);
+                activeNotes.add(note);
+
+                gsap.to(key.scale, { x: 1.5, y: 1.5, z: 1.5, duration: 0.1 });
+                gsap.to(key.material, { opacity: 1, duration: 0.1 });
+                
+                createCosmicRipple(key.position);
+                createCosmicExplosion(key.position);
+            }
+        }
+
+        function stopNote(note, key) {
+            if (activeNotes.has(note)) {
+                synth.triggerRelease(note);
+                activeNotes.delete(note);
+
+                gsap.to(key.scale, { x: 1, y: 1, z: 1, duration: 0.1 });
+                gsap.to(key.material, { opacity: 0.7, duration: 0.1 });
+            }
+        }
+
+        function createCosmicRipple(position) {
+            const rippleGeometry = new THREE.RingGeometry(0.1, 2, 32);
+            const rippleMaterial = new THREE.MeshBasicMaterial({ 
+                color: new THREE.Color(Math.random(), Math.random(), Math.random()), 
+                transparent: true, 
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            const ripple = new THREE.Mesh(rippleGeometry, rippleMaterial);
+            ripple.position.copy(position);
+            ripple.rotation.x = Math.PI / 2;
+            scene.add(ripple);
+
+            gsap.to(ripple.scale, {
+            x: 10,
+            y: 10,
+            z: 10,
+            duration: 2,
+            ease: "power2.out",
+            onComplete: () => {
+                scene.remove(ripple);
+                ripple.geometry.dispose();
+                ripple.material.dispose();
+            }
+        });
+
+        gsap.to(ripple.material, {
+            opacity: 0,
+            duration: 2,
+            ease: "power2.out"
+        });
+    }
+
+    function createCosmicExplosion(position) {
+        const particleCount = 100;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+
+        for (let i = 0; i < particleCount; i++) {
+            const x = (Math.random() - 0.5) * 2;
+            const y = (Math.random() - 0.5) * 2;
+            const z = (Math.random() - 0.5) * 2;
+
+            positions[i * 3] = x;
+            positions[i * 3 + 1] = y;
+            positions[i * 3 + 2] = z;
+
+            colors[i * 3] = Math.random();
+            colors[i * 3 + 1] = Math.random();
+            colors[i * 3 + 2] = Math.random();
+        }
+
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const material = new THREE.PointsMaterial({ 
+            size: 0.1, 
+            vertexColors: true,
+            transparent: true,
+            opacity: 1
+        });
+
+        const particles = new THREE.Points(geometry, material);
+        particles.position.copy(position);
+        scene.add(particles);
+
+        gsap.to(particles.position, {
+            x: particles.position.x + (Math.random() - 0.5) * 5,
+            y: particles.position.y + (Math.random() - 0.5) * 5,
+            z: particles.position.z + (Math.random() - 0.5) * 5,
+            duration: 2,
+            ease: "power2.out",
+            onComplete: () => {
+                scene.remove(particles);
+                geometry.dispose();
+                material.dispose();
+            }
+        });
+
+        gsap.to(material, {
+            opacity: 0,
+            duration: 2,
+            ease: "power2.out"
+        });
+    }
+
+    window.addEventListener('keydown', (event) => {
+        if (event.repeat) return; // Ignore key repeat
+        const note = keyMap[event.key.toLowerCase()];
+        if (note) {
+            const actualNote = getNote(note);
+            const key = keys.find(k => k.userData.note === note);
+            if (key) {
+                playNote(actualNote, key);
+            }
+        }
+    });
+
+    window.addEventListener('keyup', (event) => {
+        const note = keyMap[event.key.toLowerCase()];
+        if (note) {
+            const actualNote = getNote(note);
+            const key = keys.find(k => k.userData.note === note);
+            if (key) {
+                stopNote(actualNote, key);
+            }
+        }
+    });
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    function onMouseMove(event) {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(keys);
+
+        keys.forEach(key => {
+            if (intersects.find(intersect => intersect.object === key)) {
+                key.material.emissive.setHex(0xffffff);
+                key.scale.set(1.1, 1.1, 1.1);
+            } else {
+                key.material.emissive.setHex(0x000000);
+                key.scale.set(1, 1, 1);
+            }
+        });
+    }
+
+    function onMouseDown(event) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(keys);
+
+        if (intersects.length > 0) {
+            const key = intersects[0].object;
+            const note = key.userData.note;
+            const actualNote = getNote(note);
+            playNote(actualNote, key);
+        }
+    }
+
+    function onMouseUp(event) {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(keys);
+
+        if (intersects.length > 0) {
+            const key = intersects[0].object;
+            const note = key.userData.note;
+            const actualNote = getNote(note);
+            stopNote(actualNote, key);
+        }
+    }
+
+    window.addEventListener('mousemove', onMouseMove, false);
+    window.addEventListener('mousedown', onMouseDown, false);
+    window.addEventListener('mouseup', onMouseUp, false);
+
+    function onTouchStart(event) {
+        event.preventDefault();
+        mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (event.touches[0].clientY / window.innerHeight) * 2 + 1;
+        onMouseDown(event);
+    }
+
+    function onTouchEnd(event) {
+        event.preventDefault();
+        onMouseUp(event);
+    }
+
+    function onTouchMove(event) {
+        event.preventDefault();
+        mouse.x = (event.touches[0].clientX / window.innerWidth) * 2 - 1;
+        mouse.y = - (event.touches[0].clientY / window.innerHeight) * 2 + 1;
+        onMouseMove(event);
+    }
+
+    window.addEventListener('touchstart', onTouchStart, false);
+    window.addEventListener('touchend', onTouchEnd, false);
+    window.addEventListener('touchmove', onTouchMove, false);
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        starField.rotation.y += 0.0002;
+        starField.rotation.z += 0.0001;
+
+        keys.forEach(key => {
+            key.rotation.x += 0.01;
+            key.rotation.y += 0.01;
+        });
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    waveTypeSelect.addEventListener('change', () => {
+        synth.set({ oscillator: { type: waveTypeSelect.value } });
+    });
+
+    volumeControl.addEventListener('input', () => {
+        Tone.Destination.volume.rampTo(volumeControl.value * 20 - 20, 0.1);
+    });
+
+    document.body.addEventListener('click', async () => {
+        await Tone.start();
+        console.log('Tone.js is ready');
+    });
+</script>
+</body>
+</html>
